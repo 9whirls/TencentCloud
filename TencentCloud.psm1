@@ -978,10 +978,9 @@ Function Remove-TcImageById {
       ValueFromPipeline = $true
     )]
       $imageId,
-
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
 
   begin {}
@@ -991,7 +990,7 @@ Function Remove-TcImageById {
       "ImageIds.0"     = $imageId
       DeleteBindedSnap = 'true'
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     CallApi $url
   }
@@ -1007,9 +1006,9 @@ Function Get-TcDiskById {
     )]
     [string]
       $diskId,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1017,7 +1016,7 @@ Function Get-TcDiskById {
       Action = 'DescribeDisks'
       "DiskIds.0" = $diskId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).DiskSet
   }
@@ -1033,9 +1032,9 @@ Function Get-TcDiskByName {
     )]
     [string]
       $diskName,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+  
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1044,7 +1043,7 @@ Function Get-TcDiskByName {
       "Filters.0.Name" = 'disk-name'
       "Filters.0.Values.0" = $diskName
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).DiskSet
   }
@@ -1058,15 +1057,13 @@ Function Get-TcDiskByRegion {
       ValueFromPipeline = $true
     )]
     [string]
-      $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {
     $objList = New-Object System.Collections.ArrayList
   }
   process {
-    $obj = GetAllTcObj 'DescribeDisks' 'DiskSet' $region $secretId $secretKey
+    $obj = GetAllTcObj 'DescribeDisks' 'DiskSet' $region
     $objList.AddRange(@($obj))
   }
   end {
@@ -1082,9 +1079,8 @@ Function Resize-TcDisk {
     )]
       $disk,
 
-    $diskGb,
-    $secretId = $env:TC_CLIENT_ID,
-    $secretKey = $env:TC_CLIENT_SECRET
+    [int]
+      $diskGb
   )
 
   begin {}
@@ -1095,7 +1091,7 @@ Function Resize-TcDisk {
       DiskId   = $disk.diskId
       DiskSize = $diskGb
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     CallApi $url
   }
@@ -1124,9 +1120,7 @@ Function New-TcDisk {
     
     [parameter(Mandatory = $true)]
     [string]
-      $zone,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $zone
   )
   begin {
      $dic = @{
@@ -1157,7 +1151,7 @@ Function New-TcDisk {
   }
   process {
     $dic['DiskName'] = $diskName
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).DiskIdSet
   }
@@ -1170,10 +1164,7 @@ Function Remove-TcDisk {
       Mandatory = $true,
       ValueFromPipeline = $true
     )]
-      $disk,
-
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $disk
   )
 
   begin {}
@@ -1183,7 +1174,7 @@ Function Remove-TcDisk {
       Action      = 'TerminateDisks'
       "DiskIds.0" = $disk.diskId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     CallApi $url
   }
@@ -1199,9 +1190,9 @@ Function Get-TcSnapshotById {
     )]
     [string]
       $snapshotId,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+  
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1209,7 +1200,7 @@ Function Get-TcSnapshotById {
       Action = 'DescribeSnapshots'
       "SnapshotIds.0" = $snapshotId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).SnapshotSet
   }
@@ -1225,9 +1216,9 @@ Function Get-TcSnapshotByName {
     )]
     [string]
       $snapshotName,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1236,7 +1227,7 @@ Function Get-TcSnapshotByName {
       "Filters.0.Name" = 'snapshot-name'
       "Filters.0.Values.0" = $snapshotName
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).SnapshotSet
   }
@@ -1250,15 +1241,13 @@ Function Get-TcSnapshotByRegion {
       ValueFromPipeline = $true
     )]
     [string]
-      $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {
     $objList = New-Object System.Collections.ArrayList
   }
   process {
-    $obj = GetAllTcObj 'DescribeSnapshots' 'SnapshotSet' $region $secretId $secretKey
+    $obj = GetAllTcObj 'DescribeSnapshots' 'SnapshotSet' $region
     $objList.AddRange(@($obj))
   }
   end {
@@ -1277,9 +1266,7 @@ Function New-TcSnapshot {
     $snapshotName = $disk.diskName,
     [switch]
       $wait,
-    $timeout = 180,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    $timeout = 180
   )
   begin {}
   process {
@@ -1289,13 +1276,13 @@ Function New-TcSnapshot {
       SnapshotName = $snapshotName
     }
     $region = GetRegionByZone $disk.Placement.zone
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     $snapshotId = (CallApi $url).snapshotId
     "Creating snapshot $snapshotId ..."
     if ($wait) {
       while ($timeout -gt 0) {
-        $snapshot = Get-TcSnapshotById -region $region -snapshotId $snapshotId -secretId $secretId -secretKey $secretKey
+        $snapshot = Get-TcSnapshotById -region $region -snapshotId $snapshotId
         if ($snapshot.SnapshotState -eq 'CREATING') {
           sleep 10
           "`t Waiting ..."
@@ -1317,10 +1304,7 @@ Function Remove-TcSnapshot {
       Mandatory = $true,
       ValueFromPipeline = $true
     )]
-      $snapshot,
-
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $snapshot
   )
 
   begin {}
@@ -1331,7 +1315,7 @@ Function Remove-TcSnapshot {
       "SnapshotIds.0"  = $snapshot.snapshotId
       DeleteBindImages = 'true'
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     CallApi $url
   }
@@ -1347,11 +1331,7 @@ Function Get-TcInstanceDiskUsagePct {
       $instance,
     [parameter(Mandatory = $true)]
     [string]
-      $diskName,
-    [string]
-      $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    [string]
-      $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $diskName
   )
   begin {}
   process {
@@ -1366,7 +1346,7 @@ Function Get-TcInstanceDiskUsagePct {
       'Instances.N.Dimensions.1.Name' = 'diskname'
       'Instances.N.Dimensions.1.Value' = $diskName
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).datapoints.values[-1]
   }
@@ -1387,11 +1367,7 @@ Function Get-TcInstanceDiskTotalGb {
       $instance,
     [parameter(Mandatory = $true)]
     [string]
-      $diskName,
-    [string]
-      $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    [string]
-      $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $diskName
   )
   begin {}
   process {
@@ -1406,7 +1382,7 @@ Function Get-TcInstanceDiskTotalGb {
       'Instances.N.Dimensions.1.Name' = 'diskname'
       'Instances.N.Dimensions.1.Value' = $diskName
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).datapoints.values[-1] / 1024
   }
@@ -1422,9 +1398,9 @@ Function Get-TcVpcById {
     )]
     [string]
       $vpcId,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1432,7 +1408,7 @@ Function Get-TcVpcById {
       Action = 'DescribeVpcs'
       "VpcIds.0" = $vpcId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).VpcSet
   }
@@ -1448,9 +1424,9 @@ Function Get-TcVpcByName {
     )]
     [string]
       $vpcName,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1459,7 +1435,7 @@ Function Get-TcVpcByName {
       "Filters.0.Name" = 'vpc-name'
       "Filters.0.Values.0" = $vpcName
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).VpcSet
   }
@@ -1473,15 +1449,13 @@ Function Get-TcVpcByRegion {
       ValueFromPipeline = $true
     )]
     [string]
-      $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {
     $objList = New-Object System.Collections.ArrayList
   }
   process {
-    $obj = GetAllTcObj 'DescribeVpcs' 'VpcSet' $region $secretId $secretKey
+    $obj = GetAllTcObj 'DescribeVpcs' 'VpcSet' $region
     $objList.AddRange(@($obj))
   }
   end {
@@ -1500,10 +1474,9 @@ Function New-TcVpc {
       $cidrBlock,
 
     $tag = @{},
+    
     [string]
-      $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $region = (Get-TencentCloud).DefaultRegion
   )
   $dic = @{
     Action = 'CreateVpc'
@@ -1518,7 +1491,7 @@ Function New-TcVpc {
         $i++
       }
     }
-  $dic = AddApiSignature $dic $region $secretId $secretKey
+  $dic = AddApiSignature $dic $region
   $url = ConvertDic2Url $dic
   CallApi $url
 }
@@ -1529,10 +1502,7 @@ Function Remove-TcVpc {
       Mandatory = $true,
       ValueFromPipeline = $true
     )]
-      $vpc,
-    
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $vpc
   )
   begin {}
   process {
@@ -1541,7 +1511,7 @@ Function Remove-TcVpc {
       Action = 'DeleteVpc'
       "VpcId" = $vpc.VpcId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     CallApi $url
   }
@@ -1557,9 +1527,9 @@ Function Get-TcSubnetById {
     )]
     [string]
       $subnetId,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1567,7 +1537,7 @@ Function Get-TcSubnetById {
       Action = 'DescribeSubnets'
       "SubnetIds.0" = $subnetId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).SubnetSet
   }
@@ -1583,9 +1553,9 @@ Function Get-TcSubnetByName {
     )]
     [string]
       $subnetName,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1594,7 +1564,7 @@ Function Get-TcSubnetByName {
       "Filters.0.Name" = 'subnet-name'
       "Filters.0.Values.0" = $subnetName
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).SubnetSet
   }
@@ -1608,15 +1578,13 @@ Function Get-TcSubnetByRegion {
       ValueFromPipeline = $true
     )]
     [string]
-      $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {
     $objList = New-Object System.Collections.ArrayList
   }
   process {
-    $obj = GetAllTcObj 'DescribeSubnets' 'SubnetSet' $region $secretId $secretKey
+    $obj = GetAllTcObj 'DescribeSubnets' 'SubnetSet' $region
     $objList.AddRange(@($obj))
   }
   end {
@@ -1642,9 +1610,7 @@ Function New-TcSubnet {
     [string]
       $zone,
 
-    $tag = @{},
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    $tag = @{}
   )
   $dic = @{
     Action = 'CreateSubnet'
@@ -1662,7 +1628,7 @@ Function New-TcSubnet {
       }
     }
   $region = GetRegionByZone $zone
-  $dic = AddApiSignature $dic $region $secretId $secretKey
+  $dic = AddApiSignature $dic $region
   $url = ConvertDic2Url $dic
   CallApi $url
 }
@@ -1673,10 +1639,7 @@ Function Remove-TcSubnet {
       Mandatory = $true,
       ValueFromPipeline = $true
     )]
-      $subnet,
-    
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $subnet
   )
   begin {}
   process {
@@ -1685,7 +1648,7 @@ Function Remove-TcSubnet {
       Action = 'DeleteSubnet'
       "SubnetId" = $subnet.SubnetId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     CallApi $url
   }
@@ -1701,9 +1664,9 @@ Function Get-TcSecurityGroupById {
     )]
     [string]
       $securityGroupId,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1711,7 +1674,7 @@ Function Get-TcSecurityGroupById {
       Action = 'DescribeSecurityGroups'
       "SecurityGroupIds.0" = $securityGroupId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).SecurityGroupSet
   }
@@ -1727,9 +1690,9 @@ Function Get-TcSecurityGroupByName {
     )]
     [string]
       $securityGroupName,
-    $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+    
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {}
   process {
@@ -1738,7 +1701,7 @@ Function Get-TcSecurityGroupByName {
       "Filters.0.Name" = 'security-group-name'
       "Filters.0.Values.0" = $securityGroupName
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).SecurityGroupSet
   }
@@ -1752,15 +1715,13 @@ Function Get-TcSecurityGroupByRegion {
       ValueFromPipeline = $true
     )]
     [string]
-      $region = $env:TENCENTCLOUD_REGION,
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $region = (Get-TencentCloud).DefaultRegion
   )
   begin {
     $objList = New-Object System.Collections.ArrayList
   }
   process {
-    $obj = GetAllTcObj 'DescribeSecurityGroups' 'SecurityGroupSet' $region $secretId $secretKey
+    $obj = GetAllTcObj 'DescribeSecurityGroups' 'SecurityGroupSet' $region
     $objList.AddRange(@($obj))
   }
   end {
@@ -1774,10 +1735,7 @@ Function Get-TcSecurityGroupPolicy {
       Mandatory = $true,
       ValueFromPipeline = $true
     )]
-      $securityGroup,
-    
-    $secretId = $env:TENCENTCLOUD_SECRET_ID,
-    $secretKey = $env:TENCENTCLOUD_SECRET_KEY
+      $securityGroup
   )
   begin {}
   process {
@@ -1786,7 +1744,7 @@ Function Get-TcSecurityGroupPolicy {
       Action = 'DescribeSecurityGroupPolicies'
       "SecurityGroupId" = $securityGroup.SecurityGroupId
     }
-    $dic = AddApiSignature $dic $region $secretId $secretKey
+    $dic = AddApiSignature $dic $region
     $url = ConvertDic2Url $dic
     (CallApi $url).SecurityGroupPolicySet
   }
