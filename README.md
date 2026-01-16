@@ -1,2 +1,54 @@
 # TencentCloud
-Powershell module for manipulating Tencent Cloud
+Powershell module for manipulating Tencent Cloud by consuming Tencent Cloud web APIs (https://www.tencentcloud.com/document/api)
+
+# Function List
+```
+Connect-TencentCloud
+Get-TcCommandInvocation
+Get-TcCommandInvocationTask
+Get-TcDiskById
+Get-TcDiskByName
+Get-TcDiskByRegion
+Get-TcImageById
+Get-TcImageByName
+Get-TcImageByRegion
+Get-TcInstanceById
+Get-TcInstanceByName
+Get-TcInstanceByRegion
+Get-TcInstanceDiskTotalGb
+Get-TcInstanceDiskUsagePct
+Get-TcProductByRegion
+Get-TcRegion
+Get-TcSecurityGroupById
+Get-TcSecurityGroupByName
+Get-TcSecurityGroupByRegion
+Get-TcSecurityGroupPolicy
+Get-TcSnapshotById
+Get-TcSnapshotByName
+Get-TcSnapshotByRegion
+Get-TcSubnetById
+Get-TcSubnetByName
+Get-TcSubnetByRegion
+Get-TcVpcById
+Get-TcVpcByName
+Get-TcVpcByRegion
+Get-TcZone
+Get-TencentCloud
+Invoke-TcInstanceCommand
+New-TcDisk
+New-TcImage
+New-TcInstance
+New-TcSnapshot
+New-TcSubnet
+New-TcVpc
+Remove-TcDisk
+Remove-TcImageById
+Remove-TcInstance
+Remove-TcSnapshot
+Remove-TcSubnet
+Remove-TcVpc
+Resize-TcDisk
+Set-TcRegion
+Start-TcInstance
+Stop-TcInstance
+```
