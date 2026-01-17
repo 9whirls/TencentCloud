@@ -1,6 +1,11 @@
 # TencentCloud
 Powershell module for manipulating Tencent Cloud by consuming Tencent Cloud web APIs (https://www.tencentcloud.com/document/api)
 
+# Install
+```
+Install-Module -Name TencentCloud
+```
+
 # Function List
 ```
 Connect-TencentCloud
