@@ -131,7 +131,7 @@ Function SecureString2Text {
       $secret
   )
 
-  [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
+  [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR( # https://github.com/PowerShell/PowerShell/issues/19317
     [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
   )
 }
