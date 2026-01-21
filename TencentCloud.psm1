@@ -99,7 +99,7 @@ Function ConvertDic2Qs {
   )
 
   $query = @()
-  $dic.Keys | sort | %{$query += $_ + '=' + $dic[$_]}
+  $dic.Keys | sort | ForEach-Object {$query += $_ + '=' + $dic[$_]}
   $apihost = (GetApiHost $dic['Action']).url
   $qs = "GET$apihost/?"
   $qs += $query -join "&"
@@ -196,11 +196,11 @@ Function CallApi {
       $uri
   )
   try {
-    $res = Invoke-WebRequest -uri $uri -ea Stop | Select -ExpandProperty content
+    $res = Invoke-WebRequest -uri $uri -ea Stop | Select-Object -ExpandProperty content
     if ($uri -match 'Action=DescribeImages') { # fix the issue of duplicated keys
       $res = $res -ireplace "isSupportCloudinit", "IsSupportCloudinit"
     }
-    $res = $res | ConvertFrom-JSON -ea stop | Select -ExpandProperty response
+    $res = $res | ConvertFrom-JSON -ea stop | Select-Object -ExpandProperty response
   } catch {
     throw $_
   }
@@ -429,6 +429,143 @@ Function Get-TcZone {
     $dic = AddApiSignature -d $dic -r $region
     $url = ConvertDic2Url $dic
     (CallApi $url).ZoneSet
+  }
+  end {}
+}
+
+Function Get-TcInstanceTypeByRegion {
+  param(
+    [parameter(
+      ValueFromPipelineByPropertyName = $true,
+      ValueFromPipeline = $true
+    )]
+    [Alias('R')]
+    [string]
+      $region = (Get-TencentCloud).DefaultRegion
+  )
+  begin {
+    $objList = New-Object System.Collections.ArrayList
+  }
+  process {
+    $dic = @{
+      Action  = 'DescribeInstanceTypeConfigs'
+    }
+    $dic = AddApiSignature -d $dic -r $region
+    $url = ConvertDic2Url $dic
+    $obj = (CallApi $url).InstanceTypeConfigSet
+    $objList.AddRange(@($obj))
+  }
+  end {
+    $objList
+  }
+}
+
+Function Get-TcInstanceTypeByName {
+  param(
+    [parameter(
+      Mandatory = $true,
+      ValueFromPipeline = $true
+    )]
+    [Alias('N')]
+    [String]
+      $instanceTypeName,
+
+    [Alias('R')]
+    [String]
+      $region = (Get-TencentCloud).DefaultRegion
+  )
+  begin {}
+  process {
+    $dic = @{
+      Action = 'DescribeInstanceTypeConfigs'
+      "Filters.0.Name" = 'instance-type'
+      "Filters.0.Values.0" = $instanceTypeName.toUpper()
+    }
+    $dic = AddApiSignature -d $dic -r $region
+    $url = ConvertDic2Url $dic
+    (CallApi $url).InstanceTypeConfigSet
+  }
+  end {}
+}
+
+Function Get-TcInstanceTypeByFamily {
+  param(
+    [parameter(
+      Mandatory = $true,
+      ValueFromPipeline = $true
+    )]
+    [Alias('F')]
+    [String]
+      $instanceTypeFamily,
+
+    [Alias('R')]
+    [String]
+      $region = (Get-TencentCloud).DefaultRegion
+  )
+  begin {}
+  process {
+    $dic = @{
+      Action = 'DescribeInstanceTypeConfigs'
+      "Filters.0.Name" = 'instance-family'
+      "Filters.0.Values.0" = $instanceTypeFamily.toUpper()
+    }
+    $dic = AddApiSignature -d $dic -r $region
+    $url = ConvertDic2Url $dic
+    (CallApi $url).InstanceTypeConfigSet
+  }
+  end {}
+}
+
+Function Get-TcInstanceTypePrice {
+  param(
+    [parameter(
+      Mandatory = $true,
+      ValueFromPipeline = $true
+    )]
+      $instanceType,
+
+    [parameter(
+      Mandatory = $true
+    )]
+    [Alias('I')]
+    [String]
+      $imgId,
+
+    [ValidateSet('PREPAID', 'POSTPAID_BY_HOUR', 'SPOTPAID')]
+    [String]
+      $chargeType = 'POSTPAID_BY_HOUR',
+
+    [int]
+      $chargePeriodInMonth = 1,
+
+    [ValidateSet('LOCAL_BASIC', 'LOCAL_SSD', 'CLOUD_BASIC', 'CLOUD_PREMIUM', 'CLOUD_SSD', 'CLOUD_BSSD', 'CLOUD_HSSD', 'CLOUD_TSSD')]
+    [String]
+      $diskType = 'CLOUD_SSD',
+
+    [Int]
+      $diskGb = 50,
+
+    [Alias('R')]
+    [String]
+      $region = (Get-TencentCloud).DefaultRegion
+  )
+  begin {}
+  process {
+    $region = GetRegionByZone $instanceType.Zone
+    $dic = @{
+      Action = 'InquiryPriceRunInstances'
+      ImageId = $imgId
+      'Placement.Zone' = $instanceType.Zone
+      Region = $region
+      InstanceType = $instanceType.InstanceType
+      InstanceChargeType = $chargeType.toUpper()
+      'SystemDisk.DiskSize' = $diskGb
+      'SystemDisk.DiskType' = $diskType.toUpper()
+    }
+    if ($chargeType -eq 'PREPAID') { $dic['InstanceChargePrepaid.Period'] = $chargePeriodInMonth }
+    $dic = AddApiSignature $dic $region
+    $url = ConvertDic2Url $dic
+    (CallApi $url).Price.InstancePrice | Select-Object *, @{'n'='InstanceType'; 'e'={$instanceType.InstanceType}}, @{'n'='Zone'; 'e'={$instanceType.Zone}}
   }
   end {}
 }
