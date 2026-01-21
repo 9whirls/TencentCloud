@@ -22,6 +22,10 @@ Get-TcInstanceByName
 Get-TcInstanceByRegion
 Get-TcInstanceDiskTotalGb
 Get-TcInstanceDiskUsagePct
+Get-TcInstanceTypeByFamily
+Get-TcInstanceTypeByName
+Get-TcInstanceTypeByRegion
+Get-TcInstanceTypePrice
 Get-TcProductByRegion
 Get-TcRegion
 Get-TcSecurityGroupById
