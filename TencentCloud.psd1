@@ -12,7 +12,7 @@
 RootModule = 'TencentCloud.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.1.54'
+ModuleVersion = '2.0.58'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()

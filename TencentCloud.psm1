@@ -31,7 +31,7 @@ Function GetApiHost {
   $apiSite = $tc.Site
 
   Switch ($action) {
-    { $_ -eq 'GetUserAppId' } {
+    { $_ -in @('GetUserAppId', 'ListUsers', 'GetSecurityLastUsed') -or $_ -match 'AccessKey' } {
       @{
         url = "cam.$apiSite"
         ver = '2019-01-16'
@@ -253,6 +253,23 @@ Function GetAllTcObj {
 }
 
 Function Get-TencentCloud {
+  <#
+    .SYNOPSIS
+    Get the current Tencent Cloud connection.
+
+    .DESCRIPTION
+    Retrieves the current Tencent Cloud connection object containing credentials and default settings.
+
+    .OUTPUTS
+    PSObject containing connection information including Site, DefaultRegion, OwnerUin, and AppId.
+
+    .EXAMPLE
+    PS> Get-TencentCloud
+    Get the current connection object.
+
+    .ALIAS
+    Get-TC
+  #>
   [Alias('Get-TC')]
   param()
   if ($defaultTc) {
@@ -263,6 +280,40 @@ Function Get-TencentCloud {
 }
 
 Function Connect-TencentCloud {
+  <#
+    .SYNOPSIS
+    Connect to Tencent Cloud API.
+
+    .DESCRIPTION
+    Establishes a connection to Tencent Cloud using secret ID and key credentials.
+
+    .PARAMETER site
+    The Tencent Cloud API site endpoint. Valid values are 'tencentcloudapi.com' (China) or 'intl.tencentcloudapi.com' (International).
+    Default: 'tencentcloudapi.com'
+
+    .PARAMETER region
+    The default region to use for operations. Default: 'na-siliconvalley'
+
+    .PARAMETER secretId
+    Tencent Cloud secret ID for authentication.
+
+    .PARAMETER secretKey
+    Tencent Cloud secret key for authentication.
+
+    .OUTPUTS
+    PSObject containing connection information including Site, DefaultRegion, OwnerUin, and AppId.
+
+    .EXAMPLE
+    PS> Connect-TencentCloud
+    Connect using prompts for credentials.
+
+    .EXAMPLE
+    PS> Connect-TencentCloud -S 'intl.tencentcloudapi.com' -R 'ap-hongkong' -I $id -K $key
+    Connect to international Tencent Cloud in Hong Kong region.
+
+    .ALIAS
+    Connect-TC
+  #>
   [Alias('Connect-TC')]
   param(
     [ValidateSet('tencentcloudapi.com', 'intl.tencentcloudapi.com')]
@@ -319,6 +370,23 @@ Function Connect-TencentCloud {
 }
 
 Function Set-TcRegion {
+  <#
+    .SYNOPSIS
+    Set the default region for Tencent Cloud operations.
+
+    .DESCRIPTION
+    Changes the default region used for subsequent Tencent Cloud API operations.
+
+    .PARAMETER region
+    The region to set as default. Must be a valid Tencent Cloud region.
+
+    .EXAMPLE
+    PS> Set-TcRegion -R 'ap-hongkong'
+    Set the default region to Hong Kong.
+
+    .LINK
+    Get-TcRegion
+  #>
   param(
     [ValidateNotNullOrEmpty()]
     [Alias('R')]
@@ -362,6 +430,28 @@ Function Get-TcRegion {
 }
 
 Function Get-TcProductByRegion {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud products available by region.
+
+    .DESCRIPTION
+    Retrieve a list of products available in a specific Tencent Cloud region.
+
+    .PARAMETER region
+    Specify the region to query. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    Product information array.
+
+    .EXAMPLE
+    PS> Get-TcProductByRegion -R 'ap-hongkong'
+    Get products available in Hong Kong region.
+
+    .EXAMPLE
+    PS> Get-TcRegion | Get-TcProductByRegion
+    Get products for all regions.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -434,6 +524,28 @@ Function Get-TcZone {
 }
 
 Function Get-TcInstanceTypeByRegion {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud instance types available in a region.
+
+    .DESCRIPTION
+    Retrieve available CVM instance types and configurations for a specific region.
+
+    .PARAMETER region
+    Specify the region to query. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    Instance type configuration objects.
+
+    .EXAMPLE
+    PS> Get-TcInstanceTypeByRegion -R 'ap-hongkong'
+    Get all instance types available in Hong Kong.
+
+    .EXAMPLE
+    PS> Get-TcRegion | Get-TcInstanceTypeByRegion
+    Get instance types for all regions via pipeline.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -461,6 +573,26 @@ Function Get-TcInstanceTypeByRegion {
 }
 
 Function Get-TcInstanceTypeByName {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud instance type by name.
+
+    .DESCRIPTION
+    Retrieve detailed information for a specific instance type by name.
+
+    .PARAMETER instanceTypeName
+    The instance type name (e.g., 'S6.MEDIUM4'). Accepts pipeline input.
+
+    .PARAMETER region
+    Specify the region to query. Default: Current default region
+
+    .OUTPUTS
+    Instance type configuration object.
+
+    .EXAMPLE
+    PS> Get-TcInstanceTypeByName -N 'S6.MEDIUM4'
+    Get details for S6.MEDIUM4 instance type.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -489,6 +621,26 @@ Function Get-TcInstanceTypeByName {
 }
 
 Function Get-TcInstanceTypeByFamily {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud instance types by family.
+
+    .DESCRIPTION
+    Retrieve instance type configurations for a specific instance family (e.g., 'S6').
+
+    .PARAMETER instanceTypeFamily
+    The instance type family (e.g., 'S6', 'C6'). Accepts pipeline input.
+
+    .PARAMETER region
+    Specify the region to query. Default: Current default region
+
+    .OUTPUTS
+    Instance type configuration objects.
+
+    .EXAMPLE
+    PS> Get-TcInstanceTypeByFamily -F 'S6'
+    Get all S6 instance types.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -517,6 +669,41 @@ Function Get-TcInstanceTypeByFamily {
 }
 
 Function Get-TcInstanceTypePrice {
+  <#
+    .SYNOPSIS
+    Get pricing for a Tencent Cloud instance type.
+
+    .DESCRIPTION
+    Inquire about pricing for a specific instance type configuration in a region.
+
+    .PARAMETER instanceType
+    The instance type object (from pipeline). Accepts pipeline input.
+
+    .PARAMETER imgId
+    The image ID to use for the instance.
+
+    .PARAMETER chargeType
+    Billing model: PREPAID, POSTPAID_BY_HOUR, or SPOTPAID. Default: POSTPAID_BY_HOUR
+
+    .PARAMETER chargePeriodInMonth
+    Billing period in months for PREPAID instances. Default: 1
+
+    .PARAMETER diskType
+    System disk type. Default: CLOUD_SSD
+
+    .PARAMETER diskGb
+    System disk size in GB. Default: 50
+
+    .PARAMETER region
+    Region for pricing. Derived from instance type zone if not specified.
+
+    .OUTPUTS
+    Price information object.
+
+    .EXAMPLE
+    PS> Get-TcInstanceTypeByName -N 'S6.MEDIUM4' | Get-TcInstanceTypePrice -I 'img-xxxxx'
+    Get pricing for S6.MEDIUM4 instance with specified image.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -571,6 +758,30 @@ Function Get-TcInstanceTypePrice {
 }
 
 Function Get-TcInstanceById {
+  <#
+    .SYNOPSIS
+    Get a Tencent Cloud instance by ID.
+
+    .DESCRIPTION
+    Retrieve detailed information about a specific instance using its instance ID.
+
+    .PARAMETER instanceId
+    The instance ID. Accepts pipeline input via property name.
+
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Instance object(s).
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx'
+    Get instance details by ID.
+
+    .EXAMPLE
+    PS> Get-TcInstanceByRegion | Get-TcInstanceById
+    Get instances via pipeline.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -599,6 +810,26 @@ Function Get-TcInstanceById {
 }
 
 Function Get-TcInstanceByName {
+  <#
+    .SYNOPSIS
+    Get a Tencent Cloud instance by name.
+
+    .DESCRIPTION
+    Retrieve instance information by searching for a specific instance name.
+
+    .PARAMETER instanceName
+    The instance name to search for. Accepts pipeline input via property name.
+
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Instance object(s).
+
+    .EXAMPLE
+    PS> Get-TcInstanceByName -N 'my-server'
+    Get instance named 'my-server'.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -628,6 +859,28 @@ Function Get-TcInstanceByName {
 }
 
 Function Get-TcInstanceByRegion {
+  <#
+    .SYNOPSIS
+    Get all Tencent Cloud instances in a region.
+
+    .DESCRIPTION
+    Retrieve a list of all instances in a specific region.
+
+    .PARAMETER region
+    Specify the region. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    Instance object array.
+
+    .EXAMPLE
+    PS> Get-TcInstanceByRegion -R 'ap-hongkong'
+    Get all instances in Hong Kong region.
+
+    .EXAMPLE
+    PS> Get-TcRegion | Get-TcInstanceByRegion
+    Get instances for all regions.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -650,6 +903,39 @@ Function Get-TcInstanceByRegion {
 }
 
 Function Stop-TcInstance {
+  <#
+    .SYNOPSIS
+    Stop a Tencent Cloud instance.
+
+    .DESCRIPTION
+    Shut down a running instance. Can optionally wait for the operation to complete.
+
+    .PARAMETER instance
+    The instance object to stop. Accepts pipeline input.
+
+    .PARAMETER forceStop
+    Force stop the instance without graceful shutdown. Default: 'false'
+
+    .PARAMETER stoppedMode
+    Charging mode after stop: KEEP_CHARGING or STOP_CHARGING. Default: STOP_CHARGING
+
+    .PARAMETER wait
+    Wait for the operation to complete.
+
+    .PARAMETER timeout
+    Timeout in seconds for wait operation. Default: 120
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx' | Stop-TcInstance
+    Stop an instance by ID.
+
+    .EXAMPLE
+    PS> Stop-TcInstance -I $instance -W
+    Stop an instance and wait for completion.
+
+    .LINK
+    Start-TcInstance
+  #>
   param(
     [Alias('I')]
     [parameter(
@@ -712,6 +998,33 @@ Function Stop-TcInstance {
 }
 
 Function Start-TcInstance {
+  <#
+    .SYNOPSIS
+    Start a Tencent Cloud instance.
+
+    .DESCRIPTION
+    Start a stopped instance. Can optionally wait for the operation to complete.
+
+    .PARAMETER instance
+    The instance object to start. Accepts pipeline input.
+
+    .PARAMETER wait
+    Wait for the operation to complete.
+
+    .PARAMETER timeout
+    Timeout in seconds for wait operation. Default: 120
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx' | Start-TcInstance
+    Start an instance by ID.
+
+    .EXAMPLE
+    PS> Start-TcInstance -I $instance -W
+    Start an instance and wait for completion.
+
+    .LINK
+    Stop-TcInstance
+  #>
   param(
     [Alias('I')]
     [parameter(
@@ -764,6 +1077,71 @@ Function Start-TcInstance {
 }
 
 Function New-TcInstance {
+  <#
+    .SYNOPSIS
+    Create a new Tencent Cloud instance.
+
+    .DESCRIPTION
+    Launch a new CVM instance with specified configuration including instance type, image, storage, networking, and more.
+
+    .PARAMETER instanceName
+    Name for the new instance. Accepts pipeline input.
+
+    .PARAMETER zone
+    The availability zone for the instance.
+
+    .PARAMETER instanceType
+    The instance type (e.g., 'S6.MEDIUM4').
+
+    .PARAMETER imageId
+    The image ID to use.
+
+    .PARAMETER instanceChargeType
+    Billing model: PREPAID or POSTPAID_BY_HOUR. Default: POSTPAID_BY_HOUR
+
+    .PARAMETER systemDiskType
+    System disk type. Default: CLOUD_BSSD
+
+    .PARAMETER systemDiskGb
+    System disk size in GB.
+
+    .PARAMETER dataDiskCount
+    Number of data disks. Default: 0
+
+    .PARAMETER dataDiskGb
+    Size of each data disk in GB. Default: 50
+
+    .PARAMETER dataDiskType
+    Data disk type. Default: CLOUD_BSSD
+
+    .PARAMETER vpcId
+    Virtual Private Cloud ID.
+
+    .PARAMETER subnetId
+    Subnet ID.
+
+    .PARAMETER securityGroupId
+    Security group ID.
+
+    .PARAMETER publicIpAssigned
+    Assign public IP. Default: $false
+
+    .PARAMETER internetChargeType
+    Internet billing model. Default: TRAFFIC_POSTPAID_BY_HOUR
+
+    .PARAMETER maxBandwidthOutMb
+    Maximum outbound bandwidth in Mbps. Default: 50
+
+    .PARAMETER tag
+    Hashtable of tags to apply to instance.
+
+    .OUTPUTS
+    Instance ID array.
+
+    .EXAMPLE
+    PS> New-TcInstance -InstanceName 'web-server' -Zone 'ap-hongkong-2' -InstanceType 'S6.MEDIUM4' -ImageId 'img-xxxxx'
+    Create a new instance with default settings.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -884,6 +1262,27 @@ Function New-TcInstance {
 }
 
 Function Remove-TcInstance {
+  <#
+    .SYNOPSIS
+    Remove (terminate) a Tencent Cloud instance.
+
+    .DESCRIPTION
+    Terminate an instance and release its associated resources (public IP, data disks).
+
+    .PARAMETER instance
+    The instance object to remove. Accepts pipeline input.
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx' | Remove-TcInstance
+    Terminate an instance by ID.
+
+    .EXAMPLE
+    PS> Get-TcInstanceByName -N 'old-server' | Remove-TcInstance
+    Terminate instances by name.
+
+    .LINK
+    New-TcInstance
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -908,6 +1307,26 @@ Function Remove-TcInstance {
 }
 
 Function Get-TcCommandInvocation {
+  <#
+    .SYNOPSIS
+    Get command invocation details.
+
+    .DESCRIPTION
+    Retrieve information about a command execution invocation including status and task details.
+
+    .PARAMETER invocationId
+    The invocation ID returned by Invoke-TcInstanceCommand.
+
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Invocation object.
+
+    .EXAMPLE
+    PS> Get-TcCommandInvocation -R 'ap-hongkong' -InvocationId 'ivk-xxxxx'
+    Get invocation details.
+  #>
   param(    
     [parameter(
       Mandatory = $true
@@ -928,6 +1347,26 @@ Function Get-TcCommandInvocation {
 }
 
 Function Get-TcCommandInvocationTask {
+  <#
+    .SYNOPSIS
+    Get command invocation task details.
+
+    .DESCRIPTION
+    Retrieve detailed execution results of a specific invocation task on an instance.
+
+    .PARAMETER invocationTaskId
+    The invocation task ID.
+
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Invocation task object with execution results.
+
+    .EXAMPLE
+    PS> Get-TcCommandInvocationTask -R 'ap-hongkong' -InvocationTaskId 'ivkt-xxxxx'
+    Get task execution details.
+  #>
   param(
     [parameter(
       Mandatory = $true
@@ -949,6 +1388,43 @@ Function Get-TcCommandInvocationTask {
 }
 
 Function Invoke-TcInstanceCommand {
+  <#
+    .SYNOPSIS
+    Execute a command on a Tencent Cloud instance.
+
+    .DESCRIPTION
+    Run a shell, PowerShell, or batch command on an instance using the Tencent Agent service.
+
+    .PARAMETER instance
+    The instance object to execute on. Accepts pipeline input.
+
+    .PARAMETER command
+    The command to execute.
+
+    .PARAMETER commandType
+    Command type: BAT, POWERSHELL, or SHELL. Default: POWERSHELL
+
+    .PARAMETER wait
+    Wait for command completion.
+
+    .PARAMETER timeout
+    Timeout in seconds for command execution. Default: 120
+
+    .OUTPUTS
+    Invocation ID and command result (if wait is specified).
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx' | Invoke-TcInstanceCommand -Command 'ipconfig'
+    Run a command and return immediately with invocation ID.
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx' | Invoke-TcInstanceCommand -Command 'systemctl status docker' -CommandType SHELL -Wait
+    Run a command and wait for results.
+
+    .LINK
+    Get-TcCommandInvocation
+    Get-TcCommandInvocationTask
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1013,6 +1489,26 @@ Function Invoke-TcInstanceCommand {
 }
 
 Function Get-TcImageById {
+  <#
+    .SYNOPSIS
+    Get a Tencent Cloud image by ID.
+
+    .DESCRIPTION
+    Retrieve image details by image ID.
+
+    .PARAMETER imageId
+    The image ID. Accepts pipeline input via property name.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Image object(s).
+
+    .EXAMPLE
+    PS> Get-TcImageById -ImageId 'img-xxxxx'
+    Get image details by ID.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1040,6 +1536,26 @@ Function Get-TcImageById {
 }
 
 Function Get-TcImageByName {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud images by name.
+
+    .DESCRIPTION
+    Retrieve images matching a specific image name pattern.
+
+    .PARAMETER imageName
+    The image name to search for. Accepts pipeline input via property name.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Image object(s).
+
+    .EXAMPLE
+    PS> Get-TcImageByName -ImageName 'Ubuntu-20.04'
+    Get images with matching name.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1068,6 +1584,24 @@ Function Get-TcImageByName {
 }
 
 Function Get-TcImageByRegion {
+  <#
+    .SYNOPSIS
+    Get all images in a region.
+
+    .DESCRIPTION
+    Retrieve a list of all images available in a Tencent Cloud region.
+
+    .PARAMETER region
+    Specify the region. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    Image object array.
+
+    .EXAMPLE
+    PS> Get-TcImageByRegion -R 'ap-hongkong'
+    Get all images in Hong Kong region.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -1089,6 +1623,26 @@ Function Get-TcImageByRegion {
 }
 
 Function New-TcImage {
+  <#
+    .SYNOPSIS
+    Create a custom image from an instance.
+
+    .DESCRIPTION
+    Create a new image from a running or stopped instance. The image can be used to launch new instances.
+
+    .PARAMETER instance
+    The instance to create image from. Accepts pipeline input.
+
+    .PARAMETER imageName
+    Name for the new custom image.
+
+    .OUTPUTS
+    API response with image creation details.
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx' | New-TcImage -ImageName 'my-custom-image'
+    Create a custom image from an instance.
+  #>
   param(
     [parameter(Mandatory = $true)]
       $instance,
@@ -1109,6 +1663,27 @@ Function New-TcImage {
 }
 
 Function Remove-TcImageById {
+  <#
+    .SYNOPSIS
+    Delete a custom image.
+
+    .DESCRIPTION
+    Remove a custom image and optionally delete associated snapshots.
+
+    .PARAMETER imageId
+    The image ID to delete. Accepts pipeline input.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .EXAMPLE
+    PS> Remove-TcImageById -ImageId 'img-xxxxx'
+    Delete an image.
+
+    .EXAMPLE
+    PS> Get-TcImageByName -ImageName 'old-image' | Remove-TcImageById
+    Delete images via pipeline.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1135,6 +1710,26 @@ Function Remove-TcImageById {
 }
 
 Function Get-TcDiskById {
+  <#
+    .SYNOPSIS
+    Get a Tencent Cloud disk by ID.
+
+    .DESCRIPTION
+    Retrieve detailed information about a specific disk using its disk ID.
+
+    .PARAMETER diskId
+    The disk ID. Accepts pipeline input via property name.
+
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Disk object.
+
+    .EXAMPLE
+    PS> Get-TcDiskById -DiskId 'disk-xxxxx'
+    Get disk details by ID.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1161,6 +1756,26 @@ Function Get-TcDiskById {
 }
 
 Function Get-TcDiskByName {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud disks by name.
+
+    .DESCRIPTION
+    Retrieve disk information by searching for a specific disk name.
+
+    .PARAMETER diskName
+    The disk name to search for. Accepts pipeline input via property name.
+  
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Disk object(s).
+
+    .EXAMPLE
+    PS> Get-TcDiskByName -DiskName 'data-disk-1'
+    Get disks with matching name.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1188,6 +1803,24 @@ Function Get-TcDiskByName {
 }
 
 Function Get-TcDiskByRegion {
+  <#
+    .SYNOPSIS
+    Get all disks in a region.
+
+    .DESCRIPTION
+    Retrieve a list of all disks in a specific Tencent Cloud region.
+
+    .PARAMETER region
+    Specify the region. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    Disk object array.
+
+    .EXAMPLE
+    PS> Get-TcDiskByRegion -R 'ap-hongkong'
+    Get all disks in Hong Kong region.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -1209,6 +1842,23 @@ Function Get-TcDiskByRegion {
 }
 
 Function Resize-TcDisk {
+  <#
+    .SYNOPSIS
+    Resize a Tencent Cloud disk.
+
+    .DESCRIPTION
+    Increase the size of an existing disk (expansion only, reduction not supported).
+
+    .PARAMETER disk
+    The disk object to resize. Accepts pipeline input.
+
+    .PARAMETER diskGb
+    New disk size in GB.
+
+    .EXAMPLE
+    PS> Get-TcDiskById -DiskId 'disk-xxxxx' | Resize-TcDisk -DiskGb 100
+    Expand disk to 100 GB.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1236,6 +1886,41 @@ Function Resize-TcDisk {
 }
 
 Function New-TcDisk {
+  <#
+    .SYNOPSIS
+    Create a new Tencent Cloud disk.
+
+    .DESCRIPTION
+    Create a new cloud disk with specified configuration including type, size, billing model, and optional snapshot.
+
+    .PARAMETER diskName
+    Name for the new disk. Accepts pipeline input.
+    
+    .PARAMETER diskType
+    Disk type (CLOUD_SSD, CLOUD_HSSD, etc.). Default: CLOUD_HSSD
+
+    .PARAMETER diskChargeType
+    Billing model (PREPAID, POSTPAID_BY_HOUR, or CDCPAID). Default: POSTPAID_BY_HOUR
+
+    .PARAMETER diskGb
+    Disk size in GB.
+
+    .PARAMETER snapshotId
+    Optional snapshot ID to create disk from.
+
+    .PARAMETER tag
+    Hashtable of tags to apply to disk.
+
+    .PARAMETER zone
+    The availability zone for the disk.
+
+    .OUTPUTS
+    Disk ID array.
+
+    .EXAMPLE
+    PS> New-TcDisk -DiskName 'data-disk' -DiskType 'CLOUD_HSSD' -DiskGb 100 -Zone 'ap-hongkong-2'
+    Create a new 100GB SSD disk.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1296,6 +1981,23 @@ Function New-TcDisk {
 }
 
 Function Remove-TcDisk {
+  <#
+    .SYNOPSIS
+    Delete a Tencent Cloud disk.
+
+    .DESCRIPTION
+    Terminate and delete a cloud disk. Disk must not be attached to an instance.
+
+    .PARAMETER disk
+    The disk object to delete. Accepts pipeline input.
+
+    .EXAMPLE
+    PS> Get-TcDiskById -DiskId 'disk-xxxxx' | Remove-TcDisk
+    Delete a disk by ID.
+
+    .LINK
+    New-TcDisk
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1319,6 +2021,26 @@ Function Remove-TcDisk {
 }
 
 Function Get-TcSnapshotById {
+  <#
+    .SYNOPSIS
+    Get a Tencent Cloud snapshot by ID.
+
+    .DESCRIPTION
+    Retrieve snapshot details by snapshot ID.
+
+    .PARAMETER snapshotId
+    The snapshot ID. Accepts pipeline input via property name.
+  
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Snapshot object.
+
+    .EXAMPLE
+    PS> Get-TcSnapshotById -SnapshotId 'snap-xxxxx'
+    Get snapshot details by ID.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1345,6 +2067,26 @@ Function Get-TcSnapshotById {
 }
 
 Function Get-TcSnapshotByName {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud snapshots by name.
+
+    .DESCRIPTION
+    Retrieve snapshot information by searching for a specific snapshot name.
+
+    .PARAMETER snapshotName
+    The snapshot name to search for. Accepts pipeline input via property name.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Snapshot object(s).
+
+    .EXAMPLE
+    PS> Get-TcSnapshotByName -SnapshotName 'backup-2024'
+    Get snapshots with matching name.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1372,6 +2114,24 @@ Function Get-TcSnapshotByName {
 }
 
 Function Get-TcSnapshotByRegion {
+  <#
+    .SYNOPSIS
+    Get all snapshots in a region.
+
+    .DESCRIPTION
+    Retrieve a list of all snapshots in a specific Tencent Cloud region.
+
+    .PARAMETER region
+    Specify the region. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    Snapshot object array.
+
+    .EXAMPLE
+    PS> Get-TcSnapshotByRegion -R 'ap-hongkong'
+    Get all snapshots in Hong Kong region.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -1393,6 +2153,39 @@ Function Get-TcSnapshotByRegion {
 }
 
 Function New-TcSnapshot {
+  <#
+    .SYNOPSIS
+    Create a snapshot of a disk.
+
+    .DESCRIPTION
+    Create a snapshot from a cloud disk for backup and recovery purposes. Optionally wait for completion.
+
+    .PARAMETER disk
+    The disk object to snapshot. Accepts pipeline input.
+
+    .PARAMETER snapshotName
+    Name for the snapshot. Defaults to disk name if not specified.
+
+    .PARAMETER wait
+    Wait for snapshot creation to complete.
+
+    .PARAMETER timeout
+    Timeout in seconds for wait operation. Default: 180
+
+    .OUTPUTS
+    Snapshot ID.
+
+    .EXAMPLE
+    PS> Get-TcDiskById -DiskId 'disk-xxxxx' | New-TcSnapshot -SnapshotName 'backup-2024'
+    Create a snapshot and wait for completion.
+
+    .EXAMPLE
+    PS> New-TcSnapshot -Disk $disk -SnapshotName 'daily-backup' -Wait
+    Create a named snapshot with wait.
+
+    .LINK
+    Get-TcSnapshotById
+  #>
   param(
      [parameter(
       Mandatory = $true,
@@ -1436,6 +2229,23 @@ Function New-TcSnapshot {
 }
 
 Function Remove-TcSnapshot {
+  <#
+    .SYNOPSIS
+    Delete a Tencent Cloud snapshot.
+
+    .DESCRIPTION
+    Remove a snapshot and optionally delete associated images.
+
+    .PARAMETER snapshot
+    The snapshot object to delete. Accepts pipeline input.
+
+    .EXAMPLE
+    PS> Get-TcSnapshotById -SnapshotId 'snap-xxxxx' | Remove-TcSnapshot
+    Delete a snapshot by ID.
+
+    .LINK
+    New-TcSnapshot
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1460,6 +2270,26 @@ Function Remove-TcSnapshot {
 }
 
 Function Get-TcInstanceDiskUsagePct {
+  <#
+    .SYNOPSIS
+    Get disk usage percentage for an instance.
+
+    .DESCRIPTION
+    Retrieve the current disk usage percentage for a specific disk on an instance.
+
+    .PARAMETER instance
+    The instance object. Accepts pipeline input.
+
+    .PARAMETER diskName
+    The name of the disk to query usage for.
+
+    .OUTPUTS
+    Disk usage percentage value.
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx' | Get-TcInstanceDiskUsagePct -DiskName 'cvm_dev'
+    Get disk usage percentage.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1492,6 +2322,25 @@ Function Get-TcInstanceDiskUsagePct {
 
 Function Get-TcInstanceDiskTotalGb {
   <#
+    .SYNOPSIS
+    Get total disk size for an instance disk.
+
+    .DESCRIPTION
+    Retrieve the total disk capacity in GB for a specific disk on an instance.
+
+    .PARAMETER instance
+    The instance object. Accepts pipeline input.
+
+    .PARAMETER diskName
+    The name of the disk to query total size for.
+
+    .OUTPUTS
+    Disk total size in GB.
+
+    .EXAMPLE
+    PS> Get-TcInstanceById -I 'ins-xxxxx' | Get-TcInstanceDiskTotalGb -DiskName 'cvm_dev'
+    Get disk total size.
+
     .LINK
     Tencent Cloud API
     English: https://www.tencentcloud.com/document/product/248/33881
@@ -1527,6 +2376,26 @@ Function Get-TcInstanceDiskTotalGb {
 }
 
 Function Get-TcVpcById {
+  <#
+    .SYNOPSIS
+    Get a Tencent Cloud VPC by ID.
+
+    .DESCRIPTION
+    Retrieve VPC details by VPC ID.
+
+    .PARAMETER vpcId
+    The VPC ID. Accepts pipeline input via property name.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    VPC object.
+
+    .EXAMPLE
+    PS> Get-TcVpcById -VpcId 'vpc-xxxxx'
+    Get VPC details by ID.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1553,6 +2422,26 @@ Function Get-TcVpcById {
 }
 
 Function Get-TcVpcByName {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud VPCs by name.
+
+    .DESCRIPTION
+    Retrieve VPC information by searching for a specific VPC name.
+
+    .PARAMETER vpcName
+    The VPC name to search for. Accepts pipeline input via property name.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    VPC object(s).
+
+    .EXAMPLE
+    PS> Get-TcVpcByName -VpcName 'production-vpc'
+    Get VPCs with matching name.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1580,6 +2469,24 @@ Function Get-TcVpcByName {
 }
 
 Function Get-TcVpcByRegion {
+  <#
+    .SYNOPSIS
+    Get all VPCs in a region.
+
+    .DESCRIPTION
+    Retrieve a list of all Virtual Private Clouds (VPCs) in a specific region.
+
+    .PARAMETER region
+    Specify the region. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    VPC object array.
+
+    .EXAMPLE
+    PS> Get-TcVpcByRegion -R 'ap-hongkong'
+    Get all VPCs in Hong Kong region.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -1601,6 +2508,35 @@ Function Get-TcVpcByRegion {
 }
 
 Function New-TcVpc {
+  <#
+    .SYNOPSIS
+    Create a new Tencent Cloud VPC.
+
+    .DESCRIPTION
+    Create a new Virtual Private Cloud with specified CIDR block and optional tags.
+
+    .PARAMETER vpcName
+    Name for the new VPC.
+    
+    .PARAMETER cidrBlock
+    CIDR block for the VPC (e.g., '10.0.0.0/16').
+
+    .PARAMETER tag
+    Hashtable of tags to apply to the VPC.
+
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    API response with VPC creation details.
+
+    .EXAMPLE
+    PS> New-TcVpc -VpcName 'production' -CidrBlock '10.0.0.0/16'
+    Create a new VPC.
+
+    .LINK
+    Get-TcVpcById
+  #>
   param(
     [parameter(Mandatory = $true)]
     [string]
@@ -1634,6 +2570,23 @@ Function New-TcVpc {
 }
 
 Function Remove-TcVpc {
+  <#
+    .SYNOPSIS
+    Delete a Tencent Cloud VPC.
+
+    .DESCRIPTION
+    Remove a VPC. VPC must not contain any subnets.
+
+    .PARAMETER vpc
+    The VPC object to delete. Accepts pipeline input.
+
+    .EXAMPLE
+    PS> Get-TcVpcById -VpcId 'vpc-xxxxx' | Remove-TcVpc
+    Delete a VPC by ID.
+
+    .LINK
+    New-TcVpc
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1656,6 +2609,26 @@ Function Remove-TcVpc {
 }
 
 Function Get-TcSubnetById {
+  <#
+    .SYNOPSIS
+    Get a Tencent Cloud subnet by ID.
+
+    .DESCRIPTION
+    Retrieve subnet details by subnet ID.
+
+    .PARAMETER subnetId
+    The subnet ID. Accepts pipeline input via property name.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Subnet object.
+
+    .EXAMPLE
+    PS> Get-TcSubnetById -SubnetId 'subnet-xxxxx'
+    Get subnet details by ID.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1682,6 +2655,26 @@ Function Get-TcSubnetById {
 }
 
 Function Get-TcSubnetByName {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud subnets by name.
+
+    .DESCRIPTION
+    Retrieve subnet information by searching for a specific subnet name.
+
+    .PARAMETER subnetName
+    The subnet name to search for. Accepts pipeline input via property name.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Subnet object(s).
+
+    .EXAMPLE
+    PS> Get-TcSubnetByName -SubnetName 'public-subnet'
+    Get subnets with matching name.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1709,6 +2702,24 @@ Function Get-TcSubnetByName {
 }
 
 Function Get-TcSubnetByRegion {
+  <#
+    .SYNOPSIS
+    Get all subnets in a region.
+
+    .DESCRIPTION
+    Retrieve a list of all subnets in a specific Tencent Cloud region.
+
+    .PARAMETER region
+    Specify the region. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    Subnet object array.
+
+    .EXAMPLE
+    PS> Get-TcSubnetByRegion -R 'ap-hongkong'
+    Get all subnets in Hong Kong region.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -1730,6 +2741,38 @@ Function Get-TcSubnetByRegion {
 }
 
 Function New-TcSubnet {
+  <#
+    .SYNOPSIS
+    Create a new Tencent Cloud subnet.
+
+    .DESCRIPTION
+    Create a new subnet within a VPC with specified CIDR block and availability zone.
+
+    .PARAMETER subnetName
+    Name for the new subnet.
+    
+    .PARAMETER cidrBlock
+    CIDR block for the subnet (e.g., '10.0.1.0/24').
+
+    .PARAMETER vpcId
+    The VPC ID to create subnet in.
+    
+    .PARAMETER zone
+    The availability zone for the subnet.
+
+    .PARAMETER tag
+    Hashtable of tags to apply to the subnet.
+
+    .OUTPUTS
+    API response with subnet creation details.
+
+    .EXAMPLE
+    PS> New-TcSubnet -SubnetName 'public-subnet' -CidrBlock '10.0.1.0/24' -VpcId 'vpc-xxxxx' -Zone 'ap-hongkong-2'
+    Create a new subnet.
+
+    .LINK
+    Get-TcSubnetById
+  #>
   param(
     [parameter(Mandatory = $true)]
     [string]
@@ -1771,6 +2814,23 @@ Function New-TcSubnet {
 }
 
 Function Remove-TcSubnet {
+  <#
+    .SYNOPSIS
+    Delete a Tencent Cloud subnet.
+
+    .DESCRIPTION
+    Remove a subnet. Subnet must be empty (no instances or resources attached).
+
+    .PARAMETER subnet
+    The subnet object to delete. Accepts pipeline input.
+
+    .EXAMPLE
+    PS> Get-TcSubnetById -SubnetId 'subnet-xxxxx' | Remove-TcSubnet
+    Delete a subnet by ID.
+
+    .LINK
+    New-TcSubnet
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1793,6 +2853,26 @@ Function Remove-TcSubnet {
 }
 
 Function Get-TcSecurityGroupById {
+  <#
+    .SYNOPSIS
+    Get a Tencent Cloud security group by ID.
+
+    .DESCRIPTION
+    Retrieve security group details by security group ID.
+
+    .PARAMETER securityGroupId
+    The security group ID. Accepts pipeline input via property name.
+
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Security group object.
+
+    .EXAMPLE
+    PS> Get-TcSecurityGroupById -SecurityGroupId 'sg-xxxxx'
+    Get security group details by ID.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1819,6 +2899,26 @@ Function Get-TcSecurityGroupById {
 }
 
 Function Get-TcSecurityGroupByName {
+  <#
+    .SYNOPSIS
+    Get Tencent Cloud security groups by name.
+
+    .DESCRIPTION
+    Retrieve security group information by searching for a specific security group name.
+
+    .PARAMETER securityGroupName
+    The security group name to search for. Accepts pipeline input via property name.
+    
+    .PARAMETER region
+    Specify the region. Default: Current default region
+
+    .OUTPUTS
+    Security group object(s).
+
+    .EXAMPLE
+    PS> Get-TcSecurityGroupByName -SecurityGroupName 'web-sg'
+    Get security groups with matching name.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1846,6 +2946,24 @@ Function Get-TcSecurityGroupByName {
 }
 
 Function Get-TcSecurityGroupByRegion {
+  <#
+    .SYNOPSIS
+    Get all security groups in a region.
+
+    .DESCRIPTION
+    Retrieve a list of all security groups in a specific Tencent Cloud region.
+
+    .PARAMETER region
+    Specify the region. Accepts pipeline input.
+    Default: Current default region
+
+    .OUTPUTS
+    Security group object array.
+
+    .EXAMPLE
+    PS> Get-TcSecurityGroupByRegion -R 'ap-hongkong'
+    Get all security groups in Hong Kong region.
+  #>
   param(
     [parameter(
       ValueFromPipelineByPropertyName = $true,
@@ -1867,6 +2985,23 @@ Function Get-TcSecurityGroupByRegion {
 }
 
 Function Get-TcSecurityGroupPolicy {
+  <#
+    .SYNOPSIS
+    Get security group firewall rules.
+
+    .DESCRIPTION
+    Retrieve all inbound and outbound rules (policies) for a security group.
+
+    .PARAMETER securityGroup
+    The security group object. Accepts pipeline input.
+
+    .OUTPUTS
+    Security group policy set including inbound and outbound rules.
+
+    .EXAMPLE
+    PS> Get-TcSecurityGroupById -SecurityGroupId 'sg-xxxxx' | Get-TcSecurityGroupPolicy
+    Get all policies for a security group.
+  #>
   param(
     [parameter(
       Mandatory = $true,
@@ -1886,4 +3021,140 @@ Function Get-TcSecurityGroupPolicy {
     (CallApi $url).SecurityGroupPolicySet
   }
   end {}
+}
+
+Function Get-TcAccessKey {
+  <#
+    .SYNOPSIS
+    List access keys.
+
+    .DESCRIPTION
+    Retrieve access keys for the current user or specified user. Access keys are used for API authentication.
+
+    .PARAMETER targetUin
+    Optional user UIN to list keys for. If not specified, lists keys for current user.
+
+    .OUTPUTS
+    Access key array with key ID and creation information.
+
+    .EXAMPLE
+    PS> Get-TcAccessKey
+    Get access keys for current user.
+
+    .EXAMPLE
+    PS> Get-TcAccessKey -TargetUin '12345678'
+    Get access keys for specific user.
+
+    .LINK
+    New-TcAccessKey
+  #>
+  param(
+    [string]
+      $targetUin
+  )
+  
+  $dic = @{
+    Action  = 'ListAccessKeys'
+  }
+  if ($targetUin) { $dic['TargetUin'] = $targetUin }
+  $dic = AddApiSignature -d $dic
+  $url = ConvertDic2Url $dic
+  (CallApi $url).AccessKeys
+}
+
+Function New-TcAccessKey {
+  <#
+    .SYNOPSIS
+    Create a new access key.
+
+    .DESCRIPTION
+    Generate a new access key (secret ID and secret key pair) for API authentication.
+
+    .PARAMETER targetUin
+    Optional user UIN to create key for. If not specified, creates key for current user.
+
+    .OUTPUTS
+    New access key object with secret ID and secret key.
+
+    .EXAMPLE
+    PS> New-TcAccessKey
+    Create a new access key for current user.
+
+    .EXAMPLE
+    PS> New-TcAccessKey -TargetUin '12345678'
+    Create a new access key for specific user.
+
+    .WARNING
+    Secret key is only displayed once. Store it securely.
+
+    .LINK
+    Get-TcAccessKey
+  #>
+  param(
+    [string]
+      $targetUin
+  )
+  
+  $dic = @{
+    Action = 'CreateAccessKey'
+  }
+  if ($targetUin) { $dic['TargetUin'] = $targetUin }
+  $dic = AddApiSignature -d $dic
+  $url = ConvertDic2Url $dic
+  (CallApi $url).AccessKey
+}
+
+Function Get-TcSecurityLastUsed {
+  <#
+    .SYNOPSIS
+    Get the last used time of a secret key.
+
+    .DESCRIPTION
+    Retrieve information about when a specific secret key was last used for authentication.
+
+    .PARAMETER secretId
+    The secret ID to check.
+
+    .OUTPUTS
+    Secret ID last used information array.
+
+    .EXAMPLE
+    PS> Get-TcSecurityLastUsed -SecretId 'AKIA2EXAMPLE123456'
+    Get last used time for a secret key.
+  #>
+  param(
+    [string]
+      $secretId
+  )
+  
+  $dic = @{
+    Action = 'GetSecurityLastUsed'
+    'SecretIdList.0' = $secretId
+  }
+  $dic = AddApiSignature -d $dic
+  $url = ConvertDic2Url $dic
+  (CallApi $url).SecretIdLastUsedRows
+}
+
+Function Get-TcUser {
+  <#
+    .SYNOPSIS
+    List IAM users.
+
+    .DESCRIPTION
+    Retrieve a list of all IAM users in the account.
+
+    .OUTPUTS
+    User information array.
+
+    .EXAMPLE
+    PS> Get-TcUser
+    List all IAM users in the current account.
+  #>
+  $dic = @{
+    Action  = 'ListUsers'
+  }
+  $dic = AddApiSignature -d $dic
+  $url = ConvertDic2Url $dic
+  (CallApi $url).Data
 }
