@@ -9,6 +9,7 @@ Install-Module -Name TencentCloud
 # Function List
 ```
 Connect-TencentCloud
+Get-TcAccessKey
 Get-TcCommandInvocation
 Get-TcCommandInvocationTask
 Get-TcDiskById
@@ -32,18 +33,21 @@ Get-TcSecurityGroupById
 Get-TcSecurityGroupByName
 Get-TcSecurityGroupByRegion
 Get-TcSecurityGroupPolicy
+Get-TcSecurityLastUsed
 Get-TcSnapshotById
 Get-TcSnapshotByName
 Get-TcSnapshotByRegion
 Get-TcSubnetById
 Get-TcSubnetByName
 Get-TcSubnetByRegion
+Get-TcUser
 Get-TcVpcById
 Get-TcVpcByName
 Get-TcVpcByRegion
 Get-TcZone
 Get-TencentCloud
 Invoke-TcInstanceCommand
+New-TcAccessKey
 New-TcDisk
 New-TcImage
 New-TcInstance
